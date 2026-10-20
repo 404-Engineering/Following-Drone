@@ -4,8 +4,8 @@
 |---|---|
 | **Author** | Michael Lees |
 | **Status** | Draft |
-| **Last updated** | 2026-10-15 |
-| **Revision** | 0.5 |
+| **Last updated** | 2026-10-16 |
+| **Revision** | 0.6 |
 
 > Values marked *(proposed)* came from early design discussion and still need confirming. Replace every `TBD` as decisions are made, and keep the revision history at the bottom current.
 
@@ -358,6 +358,21 @@ Pico GPIO / GND ─┬────────────┤8 STB           │
 - **Mounting / vibration isolation:** inside the cab with external antennas
 - **Schematic / layout link:** TBD
 - **Open issues:** TBD
+
+#### 4.4.5 Design tools and ECAD ↔ MCAD workflow
+- **Schematics and PCBs:** KiCad. Projects live in `Electrical-Schematics/`; component datasheets in `Electrical-Datasheet/`.
+- **3D modeling and clearance checks:** Fusion (Personal license).
+
+**Workflow:**
+1. **Board outline (Fusion → KiCad):** draw each board's outline and mounting holes in Fusion against the frame. Export the sketch as DXF and import it into KiCad on `Edge.Cuts`.
+2. **Board model (KiCad → Fusion):** export a STEP with component 3D models (`kicad-cli pcb export step --subst-models -o board.step board.kicad_pcb`). Import it into Fusion and check clearances against the frame, other boards, connectors, and cable routes.
+3. **Iterate:** re-export the DXF when the outline changes, and the STEP when parts move.
+
+**Notes:**
+- Get STEP models for parts without stock KiCad models (Pico 2, NRF24 module, GPS module, JST-GH connectors).
+- Model the Pico mounting height (socketed or soldered) explicitly; component height drives most clearance problems.
+- Check connector access and cable bend radius (JST-GH plugs, ZED USB cable), not just part-to-part clearance.
+- Commit DXF and STEP exports alongside the KiCad projects so they stay matched to the board revision.
 
 ### 4.5 Sensor placement
 - **IMU:** at the center of mass, soft-mounted to isolate vibration.
@@ -828,6 +843,7 @@ A KILL command from the operator interface goes vehicle → radio Pico → FC di
 | 2026-10-15 | Five milestones: mapping → design and simulation → flight bring-up → manual flight → following | Three milestones (mapping → flight → following) | Prove the design in sim before building; establish manual flight before autonomy |
 | 2026-10-15 | FC firmware split into HAL + portable control code | Hardware-coupled firmware | Lets the same control code run in SITL (M2) and on the Pico 2 |
 | 2026-10-15 | CAN bus (classic, 1 Mbps) between drone boards; TCAN1042HV transceivers; `can2040` controllers | I2C, UART point-to-point, USB hub | Noise immunity, multi-node with priority, hardware CRC and retransmission, fault confinement. I2C is for on-board traces only. Transceivers are CAN FD-capable for a later upgrade |
+| 2026-10-16 | KiCad for schematics and PCBs; Fusion (Personal) for 3D modeling and clearance checks via STEP import | Fusion Electronics for everything | KiCad is free with no board limits and uses plain-text files that can be reviewed in git and checked with `kicad-cli`; Fusion handles mechanical design |
 | 2026-10-15 | No ROS | ROS 2 | Personal preference; custom messaging keeps the stack small |
 | 2026-10-15 | Gazebo (standalone, no ROS) as the M2 simulator | Isaac Sim, MuJoCo, Webots, gym-pybullet-drones, custom sim | Runs on Apple Silicon; mature physics, terrain, and sensors. Isaac Sim needs an NVIDIA RTX GPU and has no macOS support |
 
@@ -845,6 +861,8 @@ A KILL command from the operator interface goes vehicle → radio Pico → FC di
 - ISO 11898-2 (CAN physical layer)
 - `can2040` PIO CAN library
 - DroneCAN specification (connector pinout, multi-frame transfers)
+- KiCad documentation (schematic and PCB editors, `kicad-cli`)
+- Autodesk Fusion documentation (DXF export, STEP import)
 
 ---
 
@@ -857,3 +875,4 @@ A KILL command from the operator interface goes vehicle → radio Pico → FC di
 | 0.3 | 2026-10-15 | Michael Lees | Added M2 (design and simulation) and M4 (manual flight); renumbered milestones, requirements, and test phases |
 | 0.4 | 2026-10-15 | Michael Lees | Chose Gazebo (standalone) as simulator; no ROS |
 | 0.5 | 2026-10-15 | Michael Lees | Chose CAN as the inter-board bus; added TCAN1042 CAN interface circuit, CAN ID allocation, BOM entries |
+| 0.6 | 2026-10-16 | Michael Lees | Added KiCad / Fusion design tools and ECAD ↔ MCAD workflow |

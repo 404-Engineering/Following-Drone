@@ -1,0 +1,3 @@
+[submodule "Jetson-Software/3D_Space_Mapping"]
+	path = Jetson-Software/3D_Space_Mapping
+	url = https://github.com/404-Engineering/3d_space_mapping.git
